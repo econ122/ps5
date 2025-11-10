@@ -1,0 +1,681 @@
+---
+title: "Problem Set 5"
+author: "Your Name"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(knitr)
+```
+
+# Unsupervised Learning Adventure: CloudFit's User Segmentation Project
+
+**Course Material Covered:** K-means Clustering, Hierarchical Clustering, Principal Component Analysis (PCA)
+
+**Scenario Continuation:** Your predictive models have been a huge success at CloudFit! Sarah is thrilled with the renewal prediction accuracy. Now she's interested in a different type of analysis: "We want to understand our *user segments* better," she explains. "Can we group users with similar behaviors together, even without looking at renewal? I think this could help us personalize our marketing and create targeted workout programs!" You're embarking on an unsupervised learning journey to discover natural groupings in CloudFit's user base.
+
+---
+
+## **Part 1: K-means Clustering Basics**
+*"Discovering User Segments"*
+
+Sarah wants to segment CloudFit's 5,000 users into distinct groups based on their behavior patterns. Unlike your previous supervised learning work, this time there's no response variable to predict – you're looking for natural patterns in the data itself.
+
+### **Problem 1.1: Understanding the K-means Algorithm**
+
+Before diving into the data, Sarah asks you to explain how k-means clustering works. She's heard it's an iterative algorithm but wants to understand the details.
+
+**Given the following simplified dataset of 6 CloudFit users:**
+
+```
+User  | workout_frequency | app_usage_minutes
+------|-------------------|------------------
+  1   |        2          |        20
+  2   |        3          |        25
+  3   |        6          |        50
+  4   |        7          |        55
+  5   |        2          |        22
+  6   |        6          |        48
+```
+
+**Your Tasks:**
+
+a) Suppose we want K=2 clusters. Starting with a random assignment where Users 1,2,3 are in Cluster 1 and Users 4,5,6 are in Cluster 2:
+
+   - Calculate the centroid (center) of each cluster
+   - Show your calculations
+
+b) Based on these centroids, which cluster should each user be reassigned to? Use Euclidean distance and show your work for at least 2 users.
+
+c) Why does k-means iteratively reassign users and recalculate centroids? What is the algorithm trying to minimize?
+
+d) In practice, why do we run k-means multiple times with different random starting points (using `nstart` in R)?
+
+```{r problem-1-1}
+# Your answers here:
+
+# a) Centroid calculations:
+
+# Cluster 1 (Users 1,2,3):
+cluster1_centroid_workout <- 
+cluster1_centroid_usage <- 
+
+# Cluster 2 (Users 4,5,6):
+cluster2_centroid_workout <- 
+cluster2_centroid_usage <- 
+
+
+# b) Distance calculations and reassignments:
+
+# Example for User 1:
+dist_user1_to_cluster1 <- 
+dist_user1_to_cluster2 <- 
+
+
+# c) What k-means minimizes:
+
+
+# d) Why multiple random starts:
+
+```
+
+---
+
+### **Problem 1.2: Implementing K-means on CloudFit Data**
+
+You now apply k-means clustering to the full CloudFit dataset using four behavioral variables: `age`, `workout_frequency`, `premium_features_used`, and `app_usage_minutes`.
+
+**Initial Results with K=3:**
+
+```
+Cluster 1: 1,800 users
+
+- Mean age: 28
+- Mean workout_frequency: 2.1
+- Mean premium_features: 0.8
+- Mean app_usage: 25 minutes
+- Mean renewal rate: 20%
+
+Cluster 2: 2,100 users
+
+- Mean age: 35
+- Mean workout_frequency: 4.5
+- Mean premium_features: 1.9
+- Mean app_usage: 45 minutes
+- Mean renewal rate: 55%
+
+Cluster 3: 1,100 users
+
+- Mean age: 31
+- Mean workout_frequency: 6.8
+- Mean premium_features: 3.2
+- Mean app_usage: 68 minutes
+- Mean renewal rate: 75%
+```
+
+**Your Tasks:**
+
+a) Give each cluster a descriptive business name based on the characteristics. Explain your reasoning.
+
+b) Sarah notices that renewal rates differ dramatically across clusters, even though we didn't use renewal as a clustering variable. Explain why this makes sense conceptually.
+
+c) Which cluster should CloudFit's marketing team focus on to maximize retention? Explain your strategy.
+
+d) You realize that `age` is measured in years while `app_usage_minutes` goes up to 100+. Why is standardization important before clustering? What would happen if you didn't standardize?
+
+```{r problem-1-2}
+# Your answers here:
+
+# a) Cluster names and reasoning:
+
+# Cluster 1:
+
+# Cluster 2:
+
+# Cluster 3:
+
+
+# b) Why renewal rates differ:
+
+
+# c) Marketing strategy:
+
+
+# d) Standardization importance:
+
+```
+
+---
+
+### **Problem 1.3: Choosing K – The Elbow Method**
+
+Sarah asks: "How did you know to use K=3 clusters? Could there be 2 or 4 natural groups instead?"
+
+You run k-means for different values of K and get the following total within-cluster sum of squares:
+
+```
+K  | Total Within-Cluster SS
+---|------------------------
+1  |        45,000
+2  |        28,000
+3  |        18,500
+4  |        15,200
+5  |        13,800
+6  |        12,900
+7  |        12,300
+8  |        11,950
+```
+
+**Your Tasks:**
+
+a) Create a simple elbow plot (by hand or describe what it would look like). Where is the "elbow" in this plot?
+
+b) Based on the elbow method, how many clusters would you recommend? Explain your reasoning using the principle of parsimony (simpler is better).
+
+c) Why does total within-cluster SS always decrease as K increases? What would happen if K = 5,000 (the number of users)?
+
+d) Sarah is choosing between K=3 and K=4. What additional business considerations (beyond the elbow plot) might help her decide?
+
+```{r problem-1-3}
+# Your answers here:
+
+# a) Elbow plot description:
+
+
+# b) Recommended K:
+
+
+# c) Why SS always decreases:
+
+
+# d) Business considerations:
+
+```
+
+---
+
+## **Part 2: Hierarchical Clustering**
+*"Building a User Tree"*
+
+Your colleague suggests trying hierarchical clustering: "Unlike k-means, we don't have to choose K upfront. Plus, we get a nice tree diagram showing how similar users are!"
+
+### **Problem 2.1: Understanding Dendrograms**
+
+You create a hierarchical clustering dendrogram for a small subset of 8 CloudFit users:
+
+```
+Height
+   
+   15  |           
+       |          |               
+       |          |               
+   10  |      ____|____           
+       |     |         |          
+       |     |         |          
+    6  |   __|__     __|__      
+       |  |     |   |     |     
+       |  |     |   |     |     
+    3  | _|_   _|_ _|_   _|_    
+       | | |   | | | |   | |    
+    0  | 1 5   3 7 2 6   4 8
+       +----------------------
+```
+
+**Your Tasks:**
+
+a) If you cut the tree at height = 6, how many clusters would you get? Which users are in each cluster?
+
+b) According to the dendrogram, is User 1 more similar to User 3 or User 4? Explain how you can tell.
+
+c) What does the height of the tree at each fusion point represent?
+
+```{r problem-2-1}
+# Your answers here:
+
+# a) Clusters at height 6:
+
+
+# c) User similarity comparison:
+
+
+# d) Height interpretation:
+
+```
+
+---
+
+### **Problem 2.2: Linkage Methods**
+
+After the first fusion of the two closest users, subsequent fusions involve groups of multiple users. The **linkage method** determines how to measure distance between these groups.
+
+**Three main linkage options:**
+
+- **Complete linkage**: distance = maximum distance between any pair of points in the two groups
+- **Average linkage**: distance = average of all pairwise distances between the two groups  
+- **Single linkage**: distance = minimum distance between any pair of points in the two groups
+
+**Your Tasks:**
+
+a) Consider two groups: Group A = {User 1, User 2} and Group B = {User 5, User 6}
+
+If the pairwise Euclidean distances are:
+
+- User 1 to User 5: 3.2
+- User 1 to User 6: 4.1
+- User 2 to User 5: 3.8
+- User 2 to User 6: 5.0
+
+Calculate the distance between Group A and Group B using:
+
+   - Complete linkage
+   - Average linkage
+   - Single linkage
+
+b) Which linkage method would produce the most compact, tight clusters? Explain why.
+
+c) Which linkage method is most sensitive to outliers? Why?
+
+d) For CloudFit's business needs (finding distinct user segments for marketing), which linkage method would you recommend?
+
+```{r problem-2-2}
+# Your answers here:
+
+# a) Linkage calculations:
+
+complete_linkage_distance <- 
+average_linkage_distance <- 
+single_linkage_distance <- 
+
+
+# b) Most compact clusters:
+
+
+# c) Most sensitive to outliers:
+
+
+# d) Business recommendation:
+
+```
+
+---
+
+### **Problem 2.3: Hierarchical vs. K-means Comparison**
+
+You run both hierarchical clustering and k-means on the same CloudFit data and get different results. Sarah wants to know the trade-offs.
+
+**Your Tasks:**
+
+a) List two advantages of hierarchical clustering over k-means.
+
+b) List two advantages of k-means over hierarchical clustering.
+
+c) Computational complexity: With 5,000 users, which method will run faster? Why does this matter?
+
+d) For CloudFit's goal of identifying 3-4 distinct user segments for a marketing campaign, which clustering method would you recommend and why?
+
+```{r problem-2-3}
+# Your answers here:
+
+# a) Hierarchical advantages:
+
+
+# b) K-means advantages:
+
+
+# c) Speed comparison:
+
+
+# d) Recommendation for CloudFit:
+
+```
+
+---
+
+## **Part 3: Principal Component Analysis (PCA)**
+*"Simplifying the Complexity"*
+
+Sarah is excited about the clustering results but concerned: "We have so many variables – age, workout frequency, app usage, premium features, session duration, equipment preferences... How do we visualize all of this at once?" This is where PCA comes in.
+
+### **Problem 3.1: Understanding PCA Conceptually**
+
+You explain PCA to Sarah using a simple example with just two variables: `workout_frequency` (ranging 0-7) and `app_usage_minutes` (ranging 0-100).
+
+**Your Tasks:**
+
+a) What is the fundamental difference between clustering methods (k-means, hierarchical) and PCA?
+
+   - What do clustering methods group?
+   - What does PCA transform?
+
+b) When you run PCA on these two variables, you get:
+   ```
+   PC1 = 0.7 × workout_frequency + 0.71 × app_usage_minutes
+   PC2 = 0.71 × workout_frequency - 0.7 × app_usage_minutes
+   ```
+   
+   Explain in words what PC1 represents. What does a high PC1 score mean for a user?
+
+c) What does PC2 capture? How is it different from PC1?
+
+d) If workout_frequency and app_usage_minutes were perfectly uncorrelated, would PCA be useful? Why or why not?
+
+```{r problem-3-1}
+# Your answers here:
+
+# a) Fundamental difference:
+
+# Clustering groups:
+
+# PCA transforms:
+
+
+# b) PC1 interpretation:
+
+
+# c) PC2 interpretation:
+
+
+# d) PCA with uncorrelated variables:
+
+```
+
+---
+
+### **Problem 3.2: Variance Explained and Dimension Reduction**
+
+You run PCA on 8 CloudFit variables and get the following results:
+
+```
+Principal Component | Standard Deviation | Proportion of Variance | Cumulative Proportion
+--------------------|-------------------|------------------------|----------------------
+PC1                 |       2.4         |        0.45            |        0.45
+PC2                 |       1.6         |        0.22            |        0.67
+PC3                 |       1.1         |        0.15            |        0.82
+PC4                 |       0.9         |        0.08            |        0.90
+PC5                 |       0.6         |        0.04            |        0.94
+PC6                 |       0.5         |        0.03            |        0.97
+PC7                 |       0.4         |        0.02            |        0.99
+PC8                 |       0.3         |        0.01            |        1.00
+```
+
+**Your Tasks:**
+
+a) What percentage of the total variance is explained by the first principal component? What does this tell you about the CloudFit data?
+
+b) How many principal components would you need to retain to capture 90% of the variation in the data?
+
+c) This is called **dimension reduction**. Explain how going from 8 variables to 4 principal components is useful, especially for:
+
+   - Visualization
+   - Computational speed in subsequent analyses
+   - Reducing multicollinearity
+
+d) Looking at the "proportion of variance" column, where is the "elbow" in this scree plot? How many PCs would you recommend using?
+
+```{r problem-3-2}
+# Your answers here:
+
+# a) PC1 variance explained:
+
+
+# b) Components needed for 90%:
+
+
+# c) Benefits of dimension reduction:
+
+# Visualization:
+
+# Computational speed:
+
+# Multicollinearity:
+
+
+# d) Scree plot elbow:
+
+```
+
+---
+
+### **Problem 3.3: Interpreting PC Loadings**
+
+The first two principal components have the following loadings (weights) on the original variables:
+
+```
+Variable                 | PC1 Loading | PC2 Loading
+------------------------|-------------|-------------
+age                     |    0.25     |    0.62
+workout_frequency       |    0.42     |   -0.15
+premium_features_used   |    0.40     |    0.08
+app_usage_minutes       |    0.44     |   -0.18
+session_duration        |    0.41     |   -0.22
+equipment_used          |    0.38     |   -0.05
+social_features_used    |    0.28     |    0.55
+calories_burned         |    0.43     |   -0.20
+```
+
+**Your Tasks:**
+
+a) Based on the PC1 loadings, what does PC1 represent? Give it a descriptive name and explain your reasoning.
+
+b) Based on the PC2 loadings, what does PC2 represent? Give it a descriptive name. Pay special attention to which variables have positive vs. negative loadings.
+
+c) A user has a PC1 score of 3.5 and a PC2 score of -1.2. Describe what kind of CloudFit user this likely is.
+
+d) Why is it important to standardize variables before running PCA? What would happen if age (0-80) and premium_features_used (0-5) weren't standardized?
+
+```{r problem-3-3}
+# Your answers here:
+
+# a) PC1 interpretation and name:
+
+
+# b) PC2 interpretation and name:
+
+
+# c) User with PC1=3.5, PC2=-1.2:
+
+
+# d) Standardization importance:
+
+```
+
+---
+
+### **Problem 3.4: Clustering on Principal Components**
+
+Sarah has a clever idea: "Can we use PCA first to reduce dimensions, then cluster on the principal components? Would that work better than clustering on all 8 original variables?"
+
+You try both approaches and get these results:
+
+**Approach A: K-means on all 8 original variables (K=3)**
+
+- Total within-cluster SS: 18,500
+- Computation time: 12 seconds
+
+**Approach B: PCA first (keep 3 PCs), then K-means on PC scores (K=3)**
+
+- Total within-cluster SS: 19,200
+- Computation time: 3 seconds
+- Variance captured by 3 PCs: 82%
+
+**Your Tasks:**
+
+a) Why is Approach B faster than Approach A?
+
+b) The within-cluster SS is slightly higher for Approach B. Does this mean Approach B is worse? Consider what information might be in the 18% of variance that was discarded.
+
+c) What is a major advantage of clustering on PC scores rather than original variables when you have many correlated variables?
+
+d) For CloudFit's business purposes (marketing segmentation), would you recommend Approach A or B? Defend your choice considering multiple criteria.
+
+```{r problem-3-4}
+# Your answers here:
+
+# a) Why Approach B is faster:
+
+
+# b) Interpreting higher SS:
+
+
+# c) Advantage of PCA + clustering:
+
+
+# d) Recommendation:
+
+```
+
+---
+
+## **Part 4: Integrated Analysis**
+*"Putting It All Together"*
+
+Sarah wants you to synthesize everything you've learned to make final recommendations.
+
+### **Problem 4.1: Comparing Unsupervised Methods**
+
+**Your Tasks:**
+
+a) Complete this comparison table:
+
+```
+Method          | Groups Cases? | Groups Variables? | Requires K? | Produces Viz? | Best Use Case
+----------------|---------------|-------------------|-------------|---------------|---------------
+K-means         |               |                   |             |               |
+Hierarchical    |               |                   |             |               |
+PCA             |               |                   |             |               |
+```
+
+b) For each scenario below, recommend which method(s) to use:
+
+   i. "I want to create 4 distinct user types for targeted email campaigns"
+   
+   ii. "I want to see if there are natural groupings, but I'm not sure how many"
+   
+   iii. "I have 50 behavioral variables and want to visualize them in 2D"
+   
+   iv. "I want to reduce multicollinearity before running a regression"
+
+c) Can you use multiple methods together? Describe a workflow that combines PCA with clustering.
+
+```{r problem-4-1}
+# Your answers here:
+
+# a) Comparison table: [Fill in above]
+
+# b) Method recommendations:
+
+# i.
+
+# ii.
+
+# iii.
+
+# iv.
+
+
+# c) Combined workflow:
+
+```
+
+---
+
+### **Problem 4.2: Business Presentation**
+
+You're preparing a final presentation for CloudFit's executive team. They are non-technical but need to make decisions based on your analysis.
+
+**Your Tasks:**
+
+a) Write a 3-4 sentence summary of what you discovered using unsupervised learning. Avoid technical jargon – explain it as you would to Sarah (non-data scientist CEO).
+
+b) Based on your clustering analysis, recommend three specific, actionable business strategies CloudFit should implement.
+
+c) Sarah asks: "How is this different from the supervised learning we did before (predicting renewal)?" Explain the key difference and why both types of analysis are valuable.
+
+d) The marketing director asks: "These clusters are interesting, but how confident are we that they're real patterns and not just artifacts of the algorithm?" This is a profound question. How would you address concerns about the validity of unsupervised learning results?
+
+```{r problem-4-2}
+# Your answers here:
+
+# a) Executive summary:
+
+
+# b) Three business strategies:
+
+# Strategy 1:
+
+# Strategy 2:
+
+# Strategy 3:
+
+
+# c) Supervised vs. unsupervised difference:
+
+
+# d) Addressing validity concerns:
+
+```
+
+---
+
+## **Part 5: Advanced Conceptual Understanding**
+
+### **Problem 5.1: Theoretical Connections**
+
+**Your Tasks:**
+
+a) **Bias-Variance Trade-off**: We discussed this extensively with supervised learning. Does it apply to k-means clustering? Why or why not? (Hint: think about what k-means is optimizing and whether there's a "true" cluster assignment)
+
+b) **Curse of Dimensionality**: Both clustering and PCA are affected by the curse of dimensionality (as the number of variables increases, data becomes increasingly sparse). Explain why PCA is often used as a preprocessing step before clustering in high-dimensional spaces.
+
+c) **Supervised + Unsupervised**: Describe a machine learning workflow that uses both unsupervised and supervised learning together. For example, how could you use clustering results to improve a supervised prediction model?
+
+```{r problem-5-1}
+# Your answers here:
+
+# a) Bias-variance in k-means:
+
+
+# b) PCA and curse of dimensionality:
+
+
+# c) Combined workflow example:
+
+```
+
+---
+
+## **Conclusion: The Complete CloudFit Analytics Journey**
+
+Over the course of your work with CloudFit, you've progressed from basic predictive modeling through sophisticated machine learning:
+
+- **Problem Set 3**: Classification with logistic regression and k-NN  
+- **Problem Set 4**: Tree-based methods and ensemble learning  
+- **Problem Set 5**: Unsupervised learning and user segmentation
+
+**Final Reflection:**
+
+Write a brief summary (4-5 sentences) addressing:
+
+a) How do supervised and unsupervised learning complement each other in a real business setting like CloudFit?
+
+b) What was the most surprising or interesting thing you learned about unsupervised learning?
+
+c) If you were hired as CloudFit's first data scientist, which methods from this course would you prioritize implementing first and why?
+
+```{r final-reflection}
+# Your reflection here:
+
+# a) Supervised + unsupervised complement:
+
+
+# b) Most surprising/interesting:
+
+
+# c) Priority methods to implement:
+
+```
+
+
